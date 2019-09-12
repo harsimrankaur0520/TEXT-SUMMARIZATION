@@ -1,0 +1,103 @@
+import nltk
+nltk.download('punkt')
+from nltk import *
+nltk.download('stopwords')
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize, sent_tokenize
+def create_freqTable(text) -> dict:
+
+    stopWords = set(stopwords.words("english"))
+    words = word_tokenize(text)
+    ps = PorterStemmer()
+
+    freqTable = dict()
+    for word in words:
+        word = ps.stem(word)
+        
+        if word in stopWords:
+            continue
+        if word in freqTable:
+            freqTable[word] += 1
+        else:
+            freqTable[word] = 1
+
+    return freqTable
+    
+    
+testString = """A dowry is a transfer of parental property, gifts, or money at the marriage 
+of a daughter. Dowry contrasts with the related concepts of bride price and dower. 
+While bride price or bride service is a payment by the groom or his family to the bride's 
+parents, dowry is the wealth transferred from the bride's family to the groom or his family, 
+ostensibly for the bride. Similarly, dower is the property settled on the bride herself, 
+by the groom at the time of marriage, and which remains under her ownership and control.
+Dowry is an ancient custom, and its existence may well predate records of it. 
+Dowries continue to be expected and demanded as a condition to accept a marriage
+proposal in some parts of the world, mainly in parts of Asia, Northern Africa and the 
+Balkans. In some parts of the world, disputes related to dowry sometimes result in acts 
+of violence against women, including killings and acid attacks. The custom of dowry is
+most common in cultures that are strongly patrilineal and that expect women to reside 
+with or near their husband's family (patrilocality). Dowries have long histories in 
+Europe, South Asia, Africa and other parts of the world."""
+
+
+
+table = create_freqTable(testString)
+table
+
+
+tokensent = sent_tokenize(testString)
+tokensent
+
+def _score_sent(sentences, freqTable) -> dict:
+    sentenceValue = dict()
+
+    for sentence in sentences:
+        word_count_in_sentence = (len(word_tokenize(sentence)))
+        for wordValue in freqTable:
+            if wordValue in sentence.lower():
+                if sentence[:30] in sentenceValue:
+                    sentenceValue[sentence[:30]] += freqTable[wordValue]
+                else:
+                    sentenceValue[sentence[:30]] = freqTable[wordValue]
+
+        sentenceValue[sentence[:30]] = sentenceValue[sentence[:30]] // word_count_in_sentence
+
+    return sentenceValue
+    
+    
+word_count_in_sentence = (len(word_tokenize(testString)))
+word_count_in_sentence
+
+
+score = _score_sent(tokensent, table)
+score
+
+def find_avgScore(sentenceValue) -> int:
+    sumValues = 0
+    for entry in sentenceValue:
+        sumValues += sentenceValue[entry]
+
+    average = int(sumValues / len(sentenceValue))
+
+    return average
+    
+avg = find_avgScore(score)
+avg
+
+
+def generate_summary(sentences, sentenceValue, threshold):
+    sentence_count = 0
+    summary = ''
+
+    for sentence in sentences:
+        if sentence[:30] in sentenceValue and sentenceValue[sentence[:30]] > (threshold):
+            summary += " " + sentence
+            sentence_count += 1
+
+    return summary
+    
+    
+    
+summary = generate_summary(tokensent, score, 1.5*avg)
+summary    
